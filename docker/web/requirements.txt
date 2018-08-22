@@ -1,0 +1,23 @@
+#  Required python libraries for our API
+
+#  Django
+Django==2.1
+
+# Postgres
+psycopg2-binary
+
+# Sphinx
+sphinx
+sphinx_rtd_theme
+
+# Other required libraries
+docker
+
+# gunicorn WSGI
+gunicorn
+
+# memcached
+python-memcached
+
+# Security
+django-axes

@@ -1,0 +1,35 @@
+#  Developer Docker configuration file.
+#  Starts database, web
+#
+#  Usage:
+#  ./cli start developer.yml
+#  or
+#  docker-compose -f docker-compose.yml -f developer.yml up -d --build
+
+version: '3.6'
+
+services:
+  database:
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
+    volumes:
+      - ./docker/database/postgres.developer.conf:/etc/postgresql/postgresql.conf
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: pass
+      POSTGRES_USER: user
+      POSTGRES_DB: database
+  web:
+    stdin_open: true
+    tty: true
+    environment:
+      DJANGO_SETTINGS_MODULE: settings_development
+      POSTGRES_PASSWORD: pass
+      POSTGRES_USER: user
+      POSTGRES_DB: database
+      POSTGRES_HOST: flowchat_db
+      PYTHONIOENCODING: UTF-8
+    ports:
+      - "80:80"

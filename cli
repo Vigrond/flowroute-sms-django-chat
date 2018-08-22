@@ -1,0 +1,112 @@
+#!/usr/bin/python3
+"""
+Command Line Interface (CLI) for various tasks.
+"""
+
+import click
+import docker
+import sys
+import time
+import requests
+
+from subprocess import call
+
+dclient = docker.from_env()
+
+
+@click.group()
+def cli():
+    """Command line interface."""
+    pass
+
+
+@cli.command()
+@click.argument('yml', type=click.Path(exists=True))
+def start(yml):
+    """ Run server with a given yml config file.
+    Utilizes docker-compose.
+    """
+
+    cmd = ['docker-compose', '-f', 'docker-compose.yml',
+                             '-f', yml, 'up', '-d',
+                             '--build', '--force-recreate', '-t 1']
+
+    returncode = call(cmd)
+    returncode = call(['docker', 'ps'])
+
+
+@cli.command()
+@click.option('-f', '--force', is_flag=True)
+def stop(force):
+    """ Stop all running docker containers. """
+    for container in dclient.containers.list():
+        if force:
+            container.kill()
+        else:
+            container.stop()
+    returncode = call(['docker', 'ps'])
+
+@cli.command()
+def test():
+    """ Run unit tests. """
+    returncode = call(['docker', 'exec', '-it',
+                       'flowchat_web',
+                       'python3', '/code/flowchat/manage.py',
+                       'test'])
+    click.echo('Unit tests ran.')
+
+@cli.command()
+def makemigrations():
+    """ Make django migrations. """
+    returncode = call(['docker', 'exec', '-it',
+                       'flowchat_web',
+                       'python', '/code/flowchat/manage.py', 'makemigrations'])
+
+@cli.command()
+def migrate():
+    """ Run django migrations. """
+    returncode = call(['docker', 'exec', '-it',
+                       'hotairballoon_web',
+                       'python', '/code/flowchat/manage.py', 'migrate'])
+
+@cli.command()
+def createSuperUser():
+    """ Create a django super user """
+    returncode = call(['docker', 'exec', '-it',
+                       'hotairballoon_web',
+                       'python', '/code/flowchat/manage.py',
+                       'createsuperuser'])
+
+@cli.command()
+def list():
+    """ List running docker containers. """
+    returncode = call(['docker', 'ps'])
+
+@cli.command()
+@click.argument('container')
+def bash(container):
+    """Connect to a docker container bash."""
+    containerobj = dclient.containers.get(container)
+    click.echo('Connected to ' + containerobj.name)
+    click.echo('Type "exit" to return.')
+    returncode = call(['docker', 'exec', '-it', container, '/bin/bash'])
+
+@cli.command()
+def clearCache():
+    """Clears Memcache"""
+    returncode = call(['docker', 'exec', '-it',
+                       'flowchat_web',
+                       'python3', '/code/flowchat/manage.py',
+                       'shell', '-c', "'from django.core.cache import cache; cache.clear()'"])
+    click.echo('Django memcached cleared.')
+
+@cli.command()
+def clearLockouts():
+    """ Clears login lockouts """
+    returncode = call(['docker', 'exec', '-it',
+                       'hotairballoon_web',
+                       'python', '/code/flowchat/manage.py',
+                       'axes_reset'])
+
+if __name__ == '__main__':
+    cli()

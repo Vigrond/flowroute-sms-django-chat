@@ -1,0 +1,47 @@
+#  Common Docker configuration file.
+#  Never use directly.
+#  Use with development.yml, staging.yml, or production.yml instead.
+
+version: '3.6'
+volumes:
+  postgres-data:
+    name: postgres-data
+
+services:
+# Django database and http server
+  database:
+    container_name: flowchat_db
+    image: postgres
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "10"
+  web:
+    container_name: flowchat_web
+    command: bash ./docker/web/start.sh
+    build: ./docker/web/
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/sh /code/docker/web/healthcheck.sh"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    volumes:
+      - .:/code
+      - ./docker/web/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - database
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "10"
