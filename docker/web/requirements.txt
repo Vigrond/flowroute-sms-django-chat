@@ -21,3 +21,6 @@ python-memcached
 
 # Security
 django-axes
+
+# flowroute
+git+https://github.com/flowroute/flowroute-sdk-v3-python.git
