@@ -1,0 +1,45 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#  Copyright (c) 2018 Art & Logic, Inc. All Rights Reserved.
+# => Vagrant Provisioning file
+# Automatically provisions a development environment for Virtual Audience Server
+# To run:
+# vagrant up
+# vagrant ssh
+
+
+Vagrant.configure("2") do |config|
+
+   config.vm.box = "ubuntu/bionic64"
+
+   #config.vm.provider "virtualbox" do |vb|
+      # prevent ubuntu/xenial64 box from writing a log file to our base dir
+   #    vb.customize [ "modifyvm", :id, "--uartmode1", "disconnected" ]
+   # end
+   config.vm.provider "virtualbox" do |v|
+     v.memory = 4096
+     v.cpus = 4
+   end
+
+   # set local server address
+   #config.vm.network "private_network", ip: "192.168.55.55"
+   config.vm.network "public_network", ip: "192.168.1.250"
+
+
+   # sync repository root so that GIT updates reflect on host machine for
+   # => a more flexible development environment.   Also allows for
+   # => vagrant resets for provision updates.
+   config.vm.synced_folder "../", "/vagrant"
+
+   # we want to have Vagrant install docker for us instead of Ansible
+   # as it is more automatic.
+   config.vm.provision "docker"
+   config.vm.provision "shell",
+      path: "./install-docker-compose.sh",
+      name: "docker-compose provisioning"
+
+   config.vm.provision "ansible_local" do |ansible|
+      ansible.playbook = "/vagrant/vagrant/playbook.yml"
+   end
+
+end
