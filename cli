@@ -66,14 +66,14 @@ def makemigrations():
 def migrate():
     """ Run django migrations. """
     returncode = call(['docker', 'exec', '-it',
-                       'hotairballoon_web',
+                       'flowchat_web',
                        'python', '/code/flowchat/manage.py', 'migrate'])
 
 @cli.command()
 def createSuperUser():
     """ Create a django super user """
     returncode = call(['docker', 'exec', '-it',
-                       'hotairballoon_web',
+                       'flowchat_web',
                        'python', '/code/flowchat/manage.py',
                        'createsuperuser'])
 
@@ -104,7 +104,7 @@ def clearCache():
 def clearLockouts():
     """ Clears login lockouts """
     returncode = call(['docker', 'exec', '-it',
-                       'hotairballoon_web',
+                       'flowchat_web',
                        'python', '/code/flowchat/manage.py',
                        'axes_reset'])
 
